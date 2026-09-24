@@ -4898,13 +4898,21 @@ def cleanup():
 atexit.register(cleanup)
 
 # --- Main Execution ---
+# --- Main Execution ---
 if __name__ == '__main__':
-    logger.info("="*50 + "\n🤖 🐉 ΝᏆΝᎫᎪ ᏴϴᎽ 🐲 Hosting Bot Starting Up...\n" + f"🐍 Python: {sys.version.split()[0]}\n" +
-                f"🔧 Base Dir: {BASE_DIR}\n📁 Upload Dir: {UPLOAD_BOTS_DIR}\n" +
-                f"📊 Data Dir: {IROTECH_DIR}\n🔑 Owner ID: {OWNER_ID}\n🛡️ Admins: {len(admin_ids)}\n" +
-                f"🚫 Banned Users: {len(banned_users)}\n📢 Mandatory Channels: {len(mandatory_channels)}\n" + "="*50)
-    keep_alive()
-    logger.info("🚀 Starting polling...")
+    logger.info("=" * 50)
+    logger.info("🤖 🐉 ΝᏆΝᎫᎪ ᏴϴᎽ 🐲 Hosting Bot Starting Up...")
+    logger.info(f"🐍 Python: {sys.version.split()[0]}")
+    logger.info(f"🔧 Base Dir: {BASE_DIR}")
+    logger.info(f"📁 Upload Dir: {UPLOAD_BOTS_DIR}")
+    logger.info(f"📊 Data Dir: {IROTECH_DIR}")
+    logger.info(f"🔑 Owner ID: {OWNER_ID}")
+    logger.info(f"🛡️ Admins: {len(admin_ids)}")
+    logger.info(f"🚫 Banned Users: {len(banned_users)}")
+    logger.info(f"📢 Mandatory Channels: {len(mandatory_channels)}")
+    logger.info("=" * 50)
+    
+    logger.info("🚀 Starting bot polling...")
     while True:
         try:
             bot.infinity_polling(logger_level=logging.INFO, timeout=60, long_polling_timeout=30)
