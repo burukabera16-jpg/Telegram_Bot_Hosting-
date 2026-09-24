@@ -33,15 +33,47 @@ app = Flask('')
 def home():
     return "🐉 ΝᏆΝᎫᎪ ᏴϴᎽ 🐲 BOT HOSTING"
 
+def run_polling():
+    """Start bot polling in background thread"""
+    logger.info("=" * 50 + "\n🤖 🐉 ΝᏆΝᎫᎪ ᏴϴᎽ 🐲 Hosting Bot Starting Up...\n" +
+                f"🐍 Python: {sys.version.split()[0]}\n" +
+                f"🔧 Base Dir: {BASE_DIR}\n📁 Upload Dir: {UPLOAD_BOTS_DIR}\n" +
+                f"📊 Data Dir: {IROTECH_DIR}\n🔑 Owner ID: {OWNER_ID}\n🛡️ Admins: {len(admin_ids)}\n" +
+                f"🚫 Banned Users: {len(banned_users)}\n📢 Mandatory Channels: {len(mandatory_channels)}\n" + "=" * 50)
+    logger.info("🚀 Starting bot polling...")
+    while True:
+        try:
+            bot.infinity_polling(logger_level=logging.INFO, timeout=60, long_polling_timeout=30)
+        except requests.exceptions.ReadTimeout: 
+            logger.warning("Polling ReadTimeout. Restarting in 5s...")
+            time.sleep(5)
+        except requests.exceptions.ConnectionError as ce: 
+            logger.error(f"Polling ConnectionError: {ce}. Retrying in 15s...")
+            time.sleep(15)
+        except Exception as e:
+            logger.critical(f"💥 Unrecoverable polling error: {e}", exc_info=True)
+            logger.info("Restarting polling in 30s due to critical error...")
+            time.sleep(30)
+        finally: 
+            logger.warning("Polling attempt finished. Will restart if in loop.")
+            time.sleep(1)
+
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 def keep_alive():
-    t = Thread(target=run_flask)
-    t.daemon = True
-    t.start()
+    # Start Flask server
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
     print("Flask Keep-Alive server started.")
+    
+    # Start polling in background
+    polling_thread = Thread(target=run_polling, daemon=True)
+    polling_thread.daemon = True
+    polling_thread.start()
+    print("Bot polling started.")
 # --- End Flask Keep Alive ---
 
 # --- Configuration FROM .env FILE ---
@@ -4897,27 +4929,5 @@ def cleanup():
     logger.warning("Cleanup finished.")
 atexit.register(cleanup)
 
-# --- Main Execution ---
-if __name__ == '__main__':
-    logger.info("="*50 + "\n🤖 🐉 ΝᏆΝᎫᎪ ᏴϴᎽ 🐲 Hosting Bot Starting Up...\n" + f"🐍 Python: {sys.version.split()[0]}\n" +
-                f"🔧 Base Dir: {BASE_DIR}\n📁 Upload Dir: {UPLOAD_BOTS_DIR}\n" +
-                f"📊 Data Dir: {IROTECH_DIR}\n🔑 Owner ID: {OWNER_ID}\n🛡️ Admins: {len(admin_ids)}\n" +
-                f"🚫 Banned Users: {len(banned_users)}\n📢 Mandatory Channels: {len(mandatory_channels)}\n" + "="*50)
-    keep_alive()
-    logger.info("🚀 Starting polling...")
-    while True:
-        try:
-            bot.infinity_polling(logger_level=logging.INFO, timeout=60, long_polling_timeout=30)
-        except requests.exceptions.ReadTimeout: 
-            logger.warning("Polling ReadTimeout. Restarting in 5s...")
-            time.sleep(5)
-        except requests.exceptions.ConnectionError as ce: 
-            logger.error(f"Polling ConnectionError: {ce}. Retrying in 15s...")
-            time.sleep(15)
-        except Exception as e:
-            logger.critical(f"💥 Unrecoverable polling error: {e}", exc_info=True)
-            logger.info("Restarting polling in 30s due to critical error...")
-            time.sleep(30)
-        finally: 
-            logger.warning("Polling attempt finished. Will restart if in loop.")
-            time.sleep(1)
+# --- Start Flask & Bot Polling ---
+keep_alive()
